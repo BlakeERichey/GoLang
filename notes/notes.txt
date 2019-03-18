@@ -1,0 +1,5 @@
+useful tutorials
+https://golangbot.com/types/
+
+defers and if/else
+https://tour.golang.org/flowcontrol/13

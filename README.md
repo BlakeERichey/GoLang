@@ -12,3 +12,18 @@ Hello
 ---
 
 Basic hello world program 
+
+Primitives
+---
+
+Declaration of variables
+
+String
+---
+
+Declaration indexing, and substring demonstations
+
+For
+---
+
+Demonstration of different methods of using for loops
