@@ -42,3 +42,8 @@ Functions
 ---
 
 Demonstration of how functions work in Go
+
+Structs
+---
+
+Rough semblance of classes in other languages. Demonstrates use of structs and functions in same program
