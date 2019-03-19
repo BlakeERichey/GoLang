@@ -41,4 +41,8 @@ func main() {
 	// a, b := 23.35, 45.12
 	// c := math.Min(a, b)
 	// fmt.Println(c)
+
+	//-----------Type Casting-----------
+	// i:=3.2
+	// fmt.Println(int(i))
 }

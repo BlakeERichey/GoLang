@@ -27,3 +27,18 @@ For
 ---
 
 Demonstration of different methods of using for loops
+
+Array
+---
+
+Basic implementation, assignment, slicing and mutation of array values
+
+If
+---
+
+Basic flowcontrol and defer demonstration
+
+Functions
+---
+
+Demonstration of how functions work in Go
