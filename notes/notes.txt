@@ -3,3 +3,9 @@ https://golangbot.com/types/
 
 defers and if/else
 https://tour.golang.org/flowcontrol/13
+
+read from file
+https://gobyexample.com/reading-files
+
+concurrency
+https://www.golang-book.com/books/intro/10
