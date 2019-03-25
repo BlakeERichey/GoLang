@@ -9,3 +9,18 @@ https://gobyexample.com/reading-files
 
 concurrency
 https://www.golang-book.com/books/intro/10
+
+GOLANG Specifics:
+recover/defers
+check(err)
+concurrency: 
+  channels
+  goroutines
+  select
+
+TODO:
+Read specific parts of a file
+throw and catch errors
+set up multiple channels
+select flow control on channels
+import
