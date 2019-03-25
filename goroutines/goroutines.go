@@ -11,7 +11,7 @@ import (
 
 // func manyRoutines() {
 // 	for i := 0; i < 10; i++ {
-// 		go goroutine(strconv.Itoa(i))
+// 		go goroutine(strconv.Itoa(i))		//-----int to string-----
 // 	}
 // }
 
