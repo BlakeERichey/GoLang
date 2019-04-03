@@ -20,7 +20,6 @@ concurrency:
 
 TODO:
 Read specific parts of a file
-throw and catch errors
-set up multiple channels
-select flow control on channels
-import
+import/library
+return interface types
+interfaces in general
