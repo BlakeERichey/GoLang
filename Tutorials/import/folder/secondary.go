@@ -1,5 +1,9 @@
-package secondary
+package secondary //all files in folder "folder"
 
-func add(x, y int) int {
+import "fmt"
+
+//Add Comment Required
+func Add(x, y int) int {
+	fmt.Println("In add")
 	return x + y
 }

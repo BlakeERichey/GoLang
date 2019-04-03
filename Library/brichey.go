@@ -1,3 +1,5 @@
+package brichey
+
 import (
 	"bufio"
 	"fmt"
@@ -6,7 +8,7 @@ import (
 )
 
 //reads a float from console and returns it
-func readNum(msg string) float64 {
+func ReadNum(msg string) float64 {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print(msg)
 	scanner.Scan()
@@ -15,7 +17,7 @@ func readNum(msg string) float64 {
 }
 
 //reads a string from the console and returns it
-func readString(msg string) string {
+func ReadString(msg string) string {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print(msg)
 	scanner.Scan()
