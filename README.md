@@ -1,59 +1,26 @@
-# GoLang
-Go Language Projects
+Overview
+===
 
-[Getting Started](https://golang.org/doc/install?download=go1.12.windows-amd64.msi)
+A collection of Go projects I complete while I am learning Go.
 
-Input
+Tutorials
 ---
 
-Basic input from console. If user types "hi", program responds by saying hi back.
+This is a collection of packages I made while learning the foundations of Go.
 
-Hello
+It is mainly used for reference, not instructions on how to 
+learn Go yourself.
+
+Brichey.go
 ---
 
-Basic hello world program .
+Collection of useful functions. May be syntatically incorrect while I am 
+learning imports (not executable on its own).
 
-Primitives
+Confidence
 ---
 
-Declaration of variables.
+Program I built in a hurry to practice and reinforce Association Rules 
+confidence computation.
 
-String
----
-
-Declaration indexing, and substring demonstations.
-
-For
----
-
-Demonstration of different methods of using for loops.
-
-Array
----
-
-Basic implementation, assignment, slicing and mutation of array values.
-
-If
----
-
-Basic flowcontrol and defer demonstration.
-
-Functions
----
-
-Demonstration of how functions work in Go.
-
-Structs
----
-
-Rough semblance of classes in other languages. Demonstrates use of structs and functions in same program.
-
-ReadFile
----
-
-Basics of Reading from a file.
-
-Goroutines
----
-
-Demonstration of Concurrency control and channels. Also implements int to string type conversion.
+Implements Typecasting, functions and input from console
