@@ -23,3 +23,22 @@ func ReadString(msg string) string {
 	scanner.Scan()
 	return scanner.Text()
 }
+
+//Contains: returns true is list contains an element == val
+//list: list of values to look at
+//val:	val to compare elements of list to
+func Contains(list []int, val int) bool {
+	for _, ele := range list {
+		if ele == val {
+			return true
+		}
+	}
+	return false
+}
+
+//moves first index to last
+func Shift(list []int) []int {
+	rv := list[1:]
+	rv = append(rv, list[0])
+	return rv
+}
