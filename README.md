@@ -3,6 +3,11 @@ Overview
 
 A collection of Go projects I complete while I am learning Go.
 
+Daily Programming Challenges
+---
+
+A collection of challenging programming problems solved using GoLang
+
 Tutorials
 ---
 
@@ -11,7 +16,7 @@ This is a collection of packages I made while learning the foundations of Go.
 It is mainly used for reference, not instructions on how to 
 learn Go yourself.
 
-Brichey.go
+Brichey.go / Library
 ---
 
 Collection of useful functions. May be syntatically incorrect while I am 
