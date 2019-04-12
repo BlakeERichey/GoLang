@@ -1,5 +1,7 @@
 package brichey
 
+//import statement: brichey "GoLang/Library"
+
 import (
 	"bufio"
 	"fmt"
