@@ -12,6 +12,11 @@ func main() {
 	fmt.Println("Original Array", s)
 	fmt.Println("Comparisons:", selectionSort(s))
 	fmt.Println("Array After:", s)
+	
+	s=createRndNums(1000, 2000, 2)
+	fmt.Println("Original Array", s)
+	fmt.Println("Comparisons:", bubbleSort(s))
+	fmt.Println("Array After:", s)
 }
 
 func selectionSort(arr []int) int {
@@ -36,6 +41,27 @@ func selectionSort(arr []int) int {
 		counter++
 		minIndex, current = counter, counter
 		fmt.Println(counter, " Traversal ", "Min Index: ", minIndex, arr)
+	}
+	fmt.Println(arr)
+	return comparisons
+}
+
+func bubbleSort(arr []int) int {
+	comparisons := 0
+	n := len(arr)
+	
+	updated := false
+	for i:=0; i<n; i++ {
+		for j:=0; j<n-i-1; j++{
+			comparisons++
+			if(arr[j] > arr[j+1]){
+				arr[j+1], arr[j] = arr[j], arr[j+1]
+				updated = true
+			}
+		}
+		if(!updated){
+			break
+		}
 	}
 	fmt.Println(arr)
 	return comparisons
