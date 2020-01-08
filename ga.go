@@ -201,10 +201,10 @@ func mutate(mxrt float64, population ...Route) {
 
 func main() {
 	rand.Seed(0)
-	cities := 300
-	popSize := 1500
-	generations := 3000
-	elites := int(.35 * float64(popSize))
+	cities := 250
+	popSize := 100
+	generations := 5000
+	elites := int(.45 * float64(popSize))
 	mxrt := 1.0 / (float64(cities) * math.Pow(math.Log10(float64(popSize)), 2) / (math.Log10(2)))
 
 	fmt.Println("Cities:", cities, "\npopSize:", popSize, "\nGenerations:", generations)

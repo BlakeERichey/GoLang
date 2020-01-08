@@ -7,6 +7,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+//Tutorial: https://medium.com/wireless-registry-engineering/gonum-tutorial-linear-algebra-in-go-21ef136fc2d7
 func main() {
 	// u := mat.NewVecDense(3, []float64{1, 2, 3})
 	// v := mat.NewVecDense(3, []float64{4, 5, 6})
@@ -58,6 +59,8 @@ func main() {
 	end := time.Now()
 	elapsed := end.Sub(start)
 	println(elapsed)
+
+	fmt.Println("Raw", D.RawMatrix())
 }
 
 func matPrint(X mat.Matrix) {
