@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +11,10 @@ import (
 
 func main() {
 	service := "omxplayer"
-	hmdir := "/home/pi"
+	tgmpath := flag.String("path", "/home/pi", "path to TGM") //default path /home/pi
+	flag.Parse()                                              //get passed -path=PATH/TO/TGM flag
+
+	hmdir := *tgmpath //string value contained in flag
 	var files []string
 
 	os.Setenv("DISPLAY", ":0") //disable primary monitor with disableScreen()

@@ -1,13 +1,17 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os/exec"
 )
 
 //make TGM directory to hold videos
 func main() {
-	hmdir := "/home/pi"
+	tgmpath := flag.String("path", "/home/pi", "path to TGM") //default path /home/pi
+	flag.Parse()                                              //get passed -path=PATH/TO/TGM flag
+	hmdir := *tgmpath                                         //string value contained in flag
+
 	omx := exec.Command("apt-get", "install", "omxplayer")
 	cmd := exec.Command("mkdir", hmdir+"/TGM")
 	primary := exec.Command("mkdir", hmdir+"/TGM/Primary")
