@@ -1,4 +1,7 @@
 add to chrontab:
 @reboot /home/%USER%/TGM/videoplayer.exe
 @reboot python /home/pi/Desktop/createfile.py
-@reboot /bin/TGMVideoPlayer.exe
+@reboot /home/pi/TGM/TGMVideoPlayer
+
+Gen RaspPi Binary:
+env GOOS=linux GOARCH=arm GOARM=5 go build setup.go
