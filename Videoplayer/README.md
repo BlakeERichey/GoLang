@@ -15,7 +15,9 @@ Inside `TGM` will be two folders:
 * Primary  
 All videos to be run once and only once should be put in here  
 * Secondary  
-Videos placed here will be run indefinitely   
+Videos placed here will be run indefinitely  
+
+**Only do one of the two following**
 
 # Autorun on Bootup instructions  
 Ensure that the binary works correctly before initializing autorun. 
@@ -31,7 +33,7 @@ The following is slightly different from the previous bootup instructions.
 
 Ensure that the binary works correctly before initializing autorun. 
 To do so, go to `/home/pi/TGM` and run `./TGMVideoPlayer`. If the program executes, 
-then it is safe to proceed. This should still run in `home/pi/TGM`.  
+then it is safe to proceed. This should still run in `/home/pi/TGM`.  
 
 To enable the script to autorun on bootup simply run the command  `crontab -e`  
 and add  
