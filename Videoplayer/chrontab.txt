@@ -3,5 +3,8 @@ add to chrontab:
 @reboot python /home/pi/Desktop/createfile.py
 @reboot /home/pi/TGM/TGMVideoPlayer
 
+Run: 
+# update-rc.d cron defaults
+
 Gen RaspPi Binary:
 env GOOS=linux GOARCH=arm GOARM=5 go build setup.go

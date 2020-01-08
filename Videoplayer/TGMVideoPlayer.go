@@ -13,6 +13,8 @@ func main() {
 	hmdir := "/home/pi"
 	var files []string
 
+	os.Setenv("DISPLAY", ":0") //disable primary monitor with disableScreen()
+	fmt.Println("DISPLAY:", os.Getenv("DISPLAY"))
 	//get files
 	dir := hmdir + "/TGM/Primary"
 	fmt.Println("Dir:", dir)
