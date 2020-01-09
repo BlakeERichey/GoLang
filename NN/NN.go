@@ -9,43 +9,48 @@ import (
 )
 
 var (
-	validActivations = []string{"relu", "linear", "sigmoid", "tanh"}
+	validActivations = []string{"relu", "linear", "softmax", "sigmoid", "tanh"}
 )
 
 type Network struct {
 	layers []Layer
-	input  int
-	output int
+	input  int //number of input nodes
+	output int //number of output nodes
 }
 
-func Sequential(input, output int) *Network {
-	var network Network
-	network.input = input
-	network.output = output
-	return &network
+func Sequential() *Network {
+	return new(Network)
 }
 
 func (nn *Network) AddLayer(nodes int, activation string) {
 	var rows int
-	if len(nn.layers) == 0 {
+	if nn.input == 0 {
+		if activation != "input" && len(activation) > 0 {
+			panic("Input layer should not have an attached activation")
+		}
+		nn.input = nodes
+	} else if len(nn.layers) == 0 {
 		rows = nn.input
 	} else {
 		rows = nn.layers[len(nn.layers)-1].cols
 	}
-	//initialize weights
-	newWeights := make([]float64, rows*nodes)
-	limit := math.Sqrt(6.0 / float64((rows + nodes)))
-	for j := range newWeights {
-		newWeights[j] = -limit + rand.Float64()*(2*limit)
+
+	if rows > 0 { //ignore first layer, as is insuffient information to gen weights
+		//initialize weights
+		newWeights := make([]float64, rows*nodes)
+		limit := math.Sqrt(6.0 / float64((rows + nodes)))
+		for j := range newWeights {
+			newWeights[j] = -limit + rand.Float64()*(2*limit)
+		}
+		//create layer
+		layer := *createLayer(rows, nodes, activation, newWeights)
+		//add layer to Network
+		nn.layers = append(nn.layers, layer)
 	}
-	//create layer
-	layer := *createLayer(rows, nodes, activation, newWeights)
-	//add layer to Network
-	nn.layers = append(nn.layers, layer)
 }
 
-func (nn *Network) Compile(activation string) { //needs LR & Optimizer later
-	nn.AddLayer(nn.output, activation)
+func (nn *Network) Compile() { //needs LR & Optimizer later
+	nn.output = nn.layers[len(nn.layers)-1].weights.RawMatrix().Cols
 }
 
 func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
@@ -92,6 +97,20 @@ func applyActivation(layer *Layer, data ...float64) {
 	} else if layer.activation == "sigmoid" {
 		for i := range data {
 			data[i] = 1.0 / (1 + math.Exp(-data[i]))
+		}
+	} else if layer.activation == "softmax" {
+		exp := make([]float64, len(data))
+		for i := range exp { //raise e^data[i]
+			exp[i] = math.Exp(data[i])
+		}
+		//get the sum of the new array
+		total := 0.0
+		for _, val := range exp {
+			total += val
+		}
+		//gen new values
+		for i := range data {
+			data[i] = exp[i] / total
 		}
 	}
 }
