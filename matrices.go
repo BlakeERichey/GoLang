@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -26,41 +25,47 @@ func main() {
 	// w := mat.NewVecDense(3, nil)
 	// w.AddVec(u, v)
 	// matPrint(w)
-	start := time.Now()
-	v := []float64{.1, .2, .3, .4, .5, .6, .7, .8, .9, .10, .11, .12}
-	A := mat.NewDense(3, 4, v)
-	matPrint(A)
-	fmt.Println(A.At(0, 2))
-	fmt.Println(A.At(1, 3))
-	fmt.Println(A.At(2, 1))
+	// start := time.Now()
+	// v := []float64{.1, .2, .3, .4, .5, .6, .7, .8, .9, .10, .11, .12}
+	// A := mat.NewDense(3, 4, v)
+	// matPrint(A)
+	// fmt.Println(A.At(0, 2))
+	// fmt.Println(A.At(1, 3))
+	// fmt.Println(A.At(2, 1))
 
-	B := mat.NewDense(3, 4, nil)
-	B.Add(A, A)
-	println("B:")
-	matPrint(B)
+	// B := mat.NewDense(3, 4, nil)
+	// B.Add(A, A)
+	// println("B:")
+	// matPrint(B)
 
-	C := mat.NewDense(3, 4, nil)
-	C.Sub(A, B)
-	println("A - B:")
-	matPrint(C)
+	// C := mat.NewDense(3, 4, nil)
+	// C.Sub(A, B)
+	// println("A - B:")
+	// matPrint(C)
 
-	C.Scale(3.5, B)
-	println("3.5 * B:")
-	matPrint(C)
+	// C.Scale(3.5, B)
+	// println("3.5 * B:")
+	// matPrint(C)
 
-	D := mat.NewDense(3, 3, nil)
-	D.Product(A, B.T())
-	println("A * B'")
-	matPrint(D)
+	// D := mat.NewDense(3, 3, nil)
+	// D.Product(A, B.T())
+	// println("A * B'")
+	// matPrint(D)
 
-	D.Product(D, A, B.T(), D)
-	println("D * A * B' * D")
-	matPrint(D)
-	end := time.Now()
-	elapsed := end.Sub(start)
-	println(elapsed)
+	// D.Product(D, A, B.T(), D)
+	// println("D * A * B' * D")
+	// matPrint(D)
+	// end := time.Now()
+	// elapsed := end.Sub(start)
+	// println(elapsed)
 
-	fmt.Println("Raw", D.RawMatrix())
+	// fmt.Println("Raw", D.RawMatrix())
+
+	a := mat.NewDense(1, 3, []float64{1, 2, 3})
+	b := mat.NewDense(3, 3, nil)
+	var c mat.Dense
+	c.Mul(a, b)
+	matPrint(&c)
 }
 
 func matPrint(X mat.Matrix) {
