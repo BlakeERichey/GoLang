@@ -1,9 +1,13 @@
 package network
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math"
 	"math/rand"
+	"os"
 
 	"gonum.org/v1/gonum/blas/blas64"
 	"gonum.org/v1/gonum/mat"
@@ -19,10 +23,12 @@ type Network struct {
 	output int //number of output nodes
 }
 
+//Sequential is used to build a Network one layer at a time
 func Sequential() *Network {
 	return new(Network)
 }
 
+//AddLayer adds a Dense layer to the end of the Network
 func (nn *Network) AddLayer(nodes int, activation string) {
 	var rows int
 	if nn.input == 0 {
@@ -50,10 +56,13 @@ func (nn *Network) AddLayer(nodes int, activation string) {
 	}
 }
 
+//Compile closes Network and notates the last layer.
 func (nn *Network) Compile() { //needs LR & Optimizer later
 	nn.output = nn.layers[len(nn.layers)-1].weights.RawMatrix().Cols
 }
 
+//FeedForward passes data into the Network and generates an output.
+//FeedForward is capable of handling multiple inputs at once.
 func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
 	obs := len(data)
 	inputs := make([]float64, 0)
@@ -85,6 +94,8 @@ func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
 	return predictions
 }
 
+//applyActivation uses layers activation method to modify the
+//hidden layer output matrix in place
 func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 	if !Contains(validActivations, layer.activation) {
 		panic("Invalid Activation")
@@ -126,18 +137,21 @@ func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 	}
 }
 
-func (nn *Network) Serialize() ([][]int, []float64) {
-	shapes := make([][]int, 0) //[[y, x], ...]
-	weights := make([]float64, 0)
+//Serialize returns relevant data to regenerate the Network
+func (nn *Network) Serialize() (shapes [][]int, weights []float64, activations []string) {
+	shapes = make([][]int, 0) //[[y, x], ...]
+	weights = make([]float64, 0)
+	activations = make([]string, 0)
 
 	for i := range nn.layers {
 		raw := nn.layers[i].weights.RawMatrix()
 		shapes = append(shapes, []int{raw.Rows, raw.Cols})
 		weights = append(weights, raw.Data...)
+		activations = append(activations, nn.layers[i].activation)
 	}
 	// fmt.Println("Shapes:", shapes)
 	// fmt.Println("Weights:", weights)
-	return shapes, weights
+	return shapes, weights, activations
 }
 
 //Deserialize takes in the shapes and weights of a network and then returns
@@ -154,6 +168,55 @@ func Deserialize(shapes [][]int, weights []float64) (desMat []mat.Dense) {
 		curIndx = end
 	}
 	return desMat
+}
+
+type Model struct {
+	Name        string
+	Shapes      [][]int
+	Weights     []float64
+	Activations []string
+}
+
+//Save serializes and saves a network into a json
+func (nn *Network) Save(filename string) {
+	shapes, weights, activations := nn.Serialize()
+	data := Model{
+		Name:        filename,
+		Shapes:      shapes,
+		Activations: activations,
+		Weights:     weights,
+	}
+	file, _ := json.Marshal(data)
+	err := ioutil.WriteFile(data.Name, file, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+//Load takes a filename and returns a Network. Expects a json generated via
+//nn.Save
+func Load(filename string) *Network {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	data, _ := ioutil.ReadAll(file)
+	var model Model
+	err = json.Unmarshal(data, &model)
+
+	//create Network
+	var nn Network
+	input, output := model.Shapes[0][0], model.Shapes[len(model.Shapes)-1][1]
+	nn.input, nn.output = input, output
+	curIndex := 0 //current starting weight index for layer
+	for i := range model.Shapes {
+		rows, cols := model.Shapes[i][0], model.Shapes[i][1]
+		nn.layers = append(nn.layers, *createLayer(rows, cols, model.Activations[i], model.Weights[curIndex:rows*cols+curIndex]))
+		curIndex += rows * cols
+	}
+	return &nn
 }
 
 type Layer struct {

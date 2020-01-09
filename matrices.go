@@ -61,8 +61,8 @@ func main() {
 
 	// fmt.Println("Raw", D.RawMatrix())
 
-	a := mat.NewDense(1, 3, []float64{1, 2, 3})
-	b := mat.NewDense(3, 3, nil)
+	a := mat.NewDense(2, 3, []float64{1, 2, 3, 4, 5, 6})
+	b := mat.NewDense(1, 3, []float64{.5, 1, 0})
 	var c mat.Dense
 	c.Mul(a, b)
 	matPrint(&c)

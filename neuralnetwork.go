@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-	// nn := network.Sequential(5, 1)
 	nn := network.Sequential()
 	nn.AddLayer(5, "input")
 	nn.AddLayer(3, "linear")
@@ -26,4 +25,6 @@ func main() {
 
 	fmt.Println(outputs)
 
+	nn.Save("test.json")
+	nn = network.Load("test.json")
 }
