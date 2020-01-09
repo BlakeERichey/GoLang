@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 
+	"gonum.org/v1/gonum/blas/blas64"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -55,30 +56,36 @@ func (nn *Network) Compile() { //needs LR & Optimizer later
 
 func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
 	obs := len(data)
-	outputs := make([][]float64, obs)
+	inputs := make([]float64, 0)
+	predictions := make([][]float64, obs)
 	for i := 0; i < obs; i++ {
 		if len(data[i]) != nn.input {
 			fmt.Println("Expected input shape", nn.input, ", recevied", len(data[i]))
 			panic("Invalid input structure")
 		}
-		input := data[i][:nn.input]
-		var hi mat.Dense //hidden layer input matrix for next layer
-		hi = *mat.NewDense(1, nn.input, input)
-		for j := range nn.layers {
-			var ho mat.Dense //hidden layer output matrix
-			// fmt.Println("HI:", hi)
-			// fmt.Println("HW:", nn.layers[j].weights)
-			ho.Mul(&hi, &nn.layers[j].weights)
-			//activations happen here!!!
-			applyActivation(&nn.layers[j], ho.RawMatrix().Data...)
-			hi = ho
-		}
-		outputs[i] = hi.RawMatrix().Data
+		inputs = append(inputs, data[i][:nn.input]...)
 	}
-	return outputs
+	var hi mat.Dense //hidden layer input matrix for next layer
+	hi = *mat.NewDense(obs, nn.input, inputs)
+	for j := range nn.layers {
+		var ho mat.Dense //hidden layer output matrix
+		// fmt.Println("HI:", hi)
+		// fmt.Println("HW:", nn.layers[j].weights)
+		ho.Mul(&hi, &nn.layers[j].weights)
+		//activations happen here!!!
+		applyActivation(&nn.layers[j], ho.RawMatrix(), ho.RawMatrix().Data...)
+		hi = ho
+	}
+	start := 0                     //where next prediction starts in array
+	outputs := hi.RawMatrix().Data //resulting matrix
+	for i := range predictions {
+		predictions[i] = outputs[start : nn.output+start]
+		start += nn.output
+	}
+	return predictions
 }
 
-func applyActivation(layer *Layer, data ...float64) {
+func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 	if !Contains(validActivations, layer.activation) {
 		panic("Invalid Activation")
 	}
@@ -99,18 +106,22 @@ func applyActivation(layer *Layer, data ...float64) {
 			data[i] = 1.0 / (1 + math.Exp(-data[i]))
 		}
 	} else if layer.activation == "softmax" {
-		exp := make([]float64, len(data))
-		for i := range exp { //raise e^data[i]
-			exp[i] = math.Exp(data[i])
-		}
-		//get the sum of the new array
-		total := 0.0
-		for _, val := range exp {
-			total += val
-		}
-		//gen new values
-		for i := range data {
-			data[i] = exp[i] / total
+		stride := 0
+		exp := make([]float64, layer.cols)
+		for ob := 0; ob < matrix.Rows; ob++ {
+			for i := range exp { //raise e^data[i]
+				exp[i] = math.Exp(data[stride+i])
+			}
+			//get the sum of the new array
+			total := 0.0
+			for _, val := range exp {
+				total += val
+			}
+			//gen new values
+			for i := range exp {
+				data[stride+i] = exp[i] / total
+			}
+			stride += layer.cols
 		}
 	}
 }
