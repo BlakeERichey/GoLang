@@ -21,7 +21,7 @@ func main() {
 		Population:  100,
 		Generations: 100,
 		Elites:      5,
-		Goal:        .99,
+		Goal:        1,
 		Metric:      "acc",
 		Mxrt:        0.01,
 	}
@@ -39,7 +39,7 @@ func main() {
 		{1, 0},
 	}
 
-	model := agents.Fit(inputs, targets, "cross-entropy", 5)
+	model := agents.Fit(inputs, targets, "cross-entropy", 1)
 
 	preds := model.FeedFoward(inputs)
 	fmt.Println(preds)

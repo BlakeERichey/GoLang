@@ -78,7 +78,8 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 		panic("Unable to compute loss with no targets.")
 	}
 
-	var metric string //value to report
+	goalMet := false
+	var metric string //value to log
 	var bestModel *Network
 	useBias := agents.population[0].bias
 	for gen := 0; gen < agents.generations; gen++ {
@@ -92,17 +93,26 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 		}
 		matingPool := agents.nextGen(losses, true)
 		bestModel = agents.population[matingPool[0]]
+		loss := losses[matingPool[0]]
+		if agents.metric == "loss" {
+			if loss <= agents.goal {
+				goalMet = true
+			}
+		}
+		metric = strconv.FormatFloat(loss, 'f', 6, 64)
+		if agents.metric == "acc" {
+			outputs := bestModel.FeedFoward(inputs)
+			acc := calcAcc(outputs, targets)
+			if acc >= agents.goal {
+				goalMet = true
+			}
+			metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+		}
 		if verbosity > 0 && gen%verbosity == 0 {
 			fmt.Print("Gen " + strconv.Itoa(gen) + ": loss - ")
-			metric = strconv.FormatFloat(losses[matingPool[0]], 'f', 6, 64)
-			if agents.metric == "acc" {
-				outputs := bestModel.FeedFoward(inputs)
-				acc := calcAcc(outputs, targets)
-				metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
-			}
 			fmt.Println(metric)
 		}
-		if gen != agents.generations-1 {
+		if gen != agents.generations-1 && !goalMet {
 			children := agents.crossover(matingPool...)
 			agents.mutate(children...)
 
@@ -115,6 +125,9 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 					agents.population[i].SetBias(bias...)
 				}
 			}
+		}
+		if goalMet {
+			break
 		}
 	}
 	return bestModel
