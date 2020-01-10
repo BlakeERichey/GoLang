@@ -179,7 +179,7 @@ func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 
 //Summary prints out a friend display of the Network architecture of settings
 func (nn *Network) Summary() {
-	shapes, _, activations, _ := nn.Serialize()
+	shapes, weights, activations, _ := nn.Serialize()
 	fmt.Println(
 		"Inputs:", nn.input,
 		"\nOutputs:", nn.output,
@@ -187,6 +187,7 @@ func (nn *Network) Summary() {
 		"\nUses Bias:", nn.bias,
 		"\nWeight Shapes:", shapes,
 		"\nLayer activations:", activations,
+		"\nTrainable Parameter:", len(weights),
 		"\n========================================"+
 			"========================================")
 }

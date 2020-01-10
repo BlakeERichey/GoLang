@@ -21,19 +21,23 @@ func main() {
 	nn.AddLayer(8, "relu")
 	nn.AddLayer(3, "softmax")
 	nn.Compile(true)
+	nn.Summary()
 
 	config := network.Config{
-		Population:  100,
-		Generations: 10000,
-		Elites:      30,
+		Population:  40,
+		Generations: 100000,
+		Elites:      10,
 		Goal:        .995,
 		Metric:      "acc",
-		Mxrt:        0.005,
+		Mxrt:        0.001,
 	}
 	agents := network.NewNNEvo(&config)
 	agents.CreatePopulation(nn)
 
+	start := time.Now()
 	model := agents.Fit(inputs, targets, "cross-entropy", 100)
+	elapsed := (time.Now()).Sub(start)
+	fmt.Println("Elapsed Time:", elapsed)
 
 	//View models results
 	loss, acc := model.Evaluate(inputs, targets, "cross-entropy")
