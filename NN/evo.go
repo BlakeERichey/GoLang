@@ -86,9 +86,7 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 		losses := make([]float64, len(agents.population))
 		for i := range agents.population {
 			outputs := agents.population[i].FeedFoward(inputs)
-			// fmt.Println("output", i, outputs)
 			loss := calcLoss(outputs, targets, method)
-			// fmt.Println(loss)
 			losses[i] = loss
 		}
 		matingPool := agents.nextGen(losses, true)
