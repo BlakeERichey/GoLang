@@ -184,6 +184,7 @@ func (nn *Network) Summary() {
 }
 
 //Serialize returns relevant data to regenerate the Network
+//returns (shapes, weights, activations, bias)
 func (nn *Network) Serialize() ([][]int, []float64, []string, [][]float64) {
 	bias := make([][]float64, 0)
 	shapes := make([][]int, 0) //[[y, x], ...]
@@ -234,6 +235,7 @@ func (nn *Network) SetWeights(desMat ...mat.Dense) {
 	}
 }
 
+//SetBias sets networks bias values to passed in array. sets nn.bias to true.
 func (nn *Network) SetBias(bias ...[]float64) {
 	if len(bias) != len(nn.layers) {
 		panic("Invalid bias structure!")
@@ -349,7 +351,8 @@ func createLayer(rows, cols int, activation string, data []float64) *Layer {
 	return &layer
 }
 
-func (layer *Layer) SetWeights(data []float64) {
+//setWeights sets layer's weight to passed in data
+func (layer *Layer) setWeights(data []float64) {
 	layer.weights = *mat.NewDense(layer.rows, layer.cols, data)
 }
 
