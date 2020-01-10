@@ -10,7 +10,8 @@ import (
 //fixed topological genetic algorithm neural network weight optimizer
 
 var (
-	validLosses = []string{"mse"}
+	validLosses  = []string{"mse", "cross-entropy"}
+	validMetrics = []string{"acc", "loss"}
 )
 
 type NNEvo struct {
@@ -51,6 +52,9 @@ func NewNNEvo(config *Config) *NNEvo {
 	net.metric = config.Metric
 	net.generations = config.Generations
 	net.population = make([]*Network, config.Population)
+	if !contains(validMetrics, net.metric) {
+		panic("Invalid metric.")
+	}
 	return net
 }
 
@@ -74,7 +78,7 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 		panic("Unable to compute loss with no targets.")
 	}
 
-	var metric float64 //value to report
+	var metric string //value to report
 	var bestModel *Network
 	useBias := agents.population[0].bias
 	for gen := 0; gen < agents.generations; gen++ {
@@ -88,14 +92,15 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 		}
 		matingPool := agents.nextGen(losses, true)
 		bestModel = agents.population[matingPool[0]]
-		if verbosity > 0 && (gen+1)%verbosity == 0 {
+		if verbosity > 0 && gen%verbosity == 0 {
+			fmt.Print("Gen " + strconv.Itoa(gen) + ": loss - ")
+			metric = strconv.FormatFloat(losses[matingPool[0]], 'f', 6, 64)
 			if agents.metric == "acc" {
 				outputs := bestModel.FeedFoward(inputs)
-				metric = calcAcc(outputs, targets)
-			} else if agents.metric == "loss" {
-				metric = losses[matingPool[0]]
+				acc := calcAcc(outputs, targets)
+				metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
 			}
-			fmt.Println("Gen "+strconv.Itoa(gen)+":", metric)
+			fmt.Println(metric)
 		}
 		if gen != agents.generations-1 {
 			children := agents.crossover(matingPool...)
@@ -219,6 +224,18 @@ func calcLoss(preds, actual [][]float64, method string) float64 {
 				sumSqErr += math.Pow((actual[i][j] - val), 2)
 			}
 			loss += sumSqErr / float64(len(preds[i]))
+		}
+	} else if method == "cross-entropy" {
+		for i := range preds {
+			sumCxEnt := 0.0
+			for j, val := range preds[i] {
+				if actual[i][j] == 1.0 {
+					sumCxEnt += -math.Log(math.Max(val, 1E-12))
+				} else { //actual == 0
+					sumCxEnt += -math.Log(math.Max(1-val, 1E-12))
+				}
+			}
+			loss = loss + sumCxEnt/float64(len(preds[i]))
 		}
 	}
 	return loss / float64(len(preds))

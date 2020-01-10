@@ -13,14 +13,14 @@ func main() {
 	nn.AddLayer(7, "linear")
 	nn.AddLayer(9, "linear")
 	nn.AddLayer(5, "linear")
-	nn.AddLayer(1, "tanh")
+	nn.AddLayer(2, "softmax")
 	nn.Compile(true)
 	// fmt.Println(nn, "\n\n")
 
 	config := network.Config{
 		Population:  100,
 		Generations: 100,
-		Elites:      1,
+		Elites:      5,
 		Goal:        .99,
 		Metric:      "acc",
 		Mxrt:        0.01,
@@ -34,12 +34,12 @@ func main() {
 		{14, 0.123, 0.89, -6.7, 7.0},
 	}
 	targets := [][]float64{
-		{0},
-		{1},
-		{1},
+		{0, 1},
+		{1, 0},
+		{1, 0},
 	}
 
-	model := agents.Fit(inputs, targets, "mse", 1)
+	model := agents.Fit(inputs, targets, "cross-entropy", 5)
 
 	preds := model.FeedFoward(inputs)
 	fmt.Println(preds)
