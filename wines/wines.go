@@ -17,16 +17,17 @@ func main() {
 	inputs, targets := load("wines.csv")
 	nn := network.Sequential()
 	nn.AddLayer(13, "input")
-	nn.AddLayer(8, "relu")
+	nn.AddLayer(16, "relu")
+	nn.AddLayer(16, "relu")
 	nn.AddLayer(8, "relu")
 	nn.AddLayer(3, "softmax")
 	nn.Compile(true)
 	nn.Summary()
 
 	config := network.Config{
-		Population:  40,
-		Generations: 100000,
-		Elites:      10,
+		Population:  100,
+		Generations: 10000,
+		Elites:      30,
 		Goal:        .995,
 		Metric:      "acc",
 		Mxrt:        0.001,
@@ -35,7 +36,7 @@ func main() {
 	agents.CreatePopulation(nn)
 
 	start := time.Now()
-	model := agents.Fit(inputs, targets, "cross-entropy", 100)
+	model := agents.Fit(inputs, targets, nil, nil, "cross-entropy", 100)
 	elapsed := (time.Now()).Sub(start)
 	fmt.Println("Elapsed Time:", elapsed)
 

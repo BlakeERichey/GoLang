@@ -11,7 +11,7 @@ import (
 
 var (
 	validLosses  = []string{"mse", "cross-entropy"}
-	validMetrics = []string{"acc", "loss"}
+	validMetrics = []string{"acc", "loss", "valid-loss", "valid-acc"}
 )
 
 type NNEvo struct {
@@ -70,12 +70,15 @@ func (agents *NNEvo) CreatePopulation(nn *Network) {
 //are fed into the network
 //method: loss function
 //verbosity: generations to go without logging results
-func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity int) *Network {
+func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64, method string, verbosity int) *Network {
 	if !contains(validLosses, method) {
 		panic("Invalid loss type.")
 	}
 	if !(len(targets) > 0) {
 		panic("Unable to compute loss with no targets.")
+	}
+	if (validInputs == nil || validTargets == nil) && contains([]string{"valid-loss", "valid-acc"}, agents.metric) {
+		panic("No validation data to evaluate validation metric")
 	}
 
 	goalMet := false
@@ -98,13 +101,27 @@ func (agents *NNEvo) Fit(inputs, targets [][]float64, method string, verbosity i
 			}
 		}
 		metric = strconv.FormatFloat(loss, 'f', 6, 64)
-		if agents.metric == "acc" {
+		if agents.metric == "acc" || agents.metric == "valid-acc" {
 			outputs := bestModel.FeedFoward(inputs)
 			acc := calcAcc(outputs, targets)
-			if acc >= agents.goal {
+			if agents.metric == "acc" && acc >= agents.goal {
 				goalMet = true
 			}
 			metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+		}
+		if agents.metric == "valid-loss" || agents.metric == "valid-acc" {
+			loss, acc := bestModel.Evaluate(validInputs, validTargets, method)
+			if agents.metric == "valid-loss" {
+				if loss <= agents.goal {
+					goalMet = true
+				}
+				metric = metric + " valid-loss - " + strconv.FormatFloat(loss, 'f', 6, 64)
+			} else {
+				if acc >= agents.goal {
+					goalMet = true
+				}
+				metric = metric + " valid-acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+			}
 		}
 		if verbosity > 0 && gen%verbosity == 0 {
 			fmt.Print("Gen " + strconv.Itoa(gen) + ": loss - ")
