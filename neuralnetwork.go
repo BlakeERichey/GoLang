@@ -13,8 +13,10 @@ func main() {
 	// nn.AddLayer(3, "linear")
 	// nn.AddLayer(5, "linear")
 	// nn.AddLayer(7, "linear")
+	// nn.AddLayer(9, "linear")
+	// nn.AddLayer(5, "linear")
 	// nn.AddLayer(1, "tanh")
-	// nn.Compile()
+	// nn.Compile(true)
 	// fmt.Println(nn, "\n\n")
 
 	// data := [][]float64{
@@ -25,6 +27,18 @@ func main() {
 
 	// outputs := nn.FeedFoward(data)
 	// fmt.Println(outputs)
+
+	// shapes, weights, _, bias := nn.Serialize()
+	// newWeights := make([]float64, len(weights))
+	// for i := range bias {
+	// 	for j := range bias[i] {
+	// 		bias[i][j] = 0
+	// 	}
+	// }
+	// des := network.Deserialize(shapes, newWeights)
+	// nn.SetWeights(des...)
+	// nn.SetBias(bias...)
+	// fmt.Println(nn, "\n\n")
 	// nn.Save("model.json")
 	// nn = network.Load("model.json")
 
@@ -34,7 +48,8 @@ func main() {
 	nn.AddLayer(256, "relu")
 	nn.AddLayer(256, "relu")
 	nn.AddLayer(1, "tanh")
-	nn.Compile()
+	nn.Compile(false)
+	nn.Summary()
 
 	//log time taken for 1000 predictions: 28.7s
 	newData := make([][]float64, 0)
@@ -48,6 +63,9 @@ func main() {
 	fmt.Println("New data:(", len(newData[0]), ",", len(newData), ")...")
 	start := time.Now()
 	for i := 0; i < 1000; i++ {
+		shapes, weights, _, _ := nn.Serialize()
+		des := network.Deserialize(shapes, weights)
+		nn.SetWeights(des...)
 		nn.FeedFoward(newData)
 	}
 	elapsed := (time.Now()).Sub(start)
