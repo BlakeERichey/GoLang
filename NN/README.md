@@ -130,7 +130,8 @@ from the model using the provided FeedForward function:
 ```  
 
 # Examples  
-Wines Coding Example: https://github.com/BlakeERichey/GoLang/tree/master/wines
-| Dataset | Topology | Generations | Accuracy |
-| --- | --- | --- | --- |
-| wines | [13 16 16 8 3] | 10000 | 100% |
+| Dataset | Topology       | Generations | Accuracy | Link                                                     |
+|---------|----------------|-------------|----------|----------------------------------------------------------|
+| wines   | [13 16 16 8 3] | 10000       | 100%     | https://github.com/BlakeERichey/GoLang/tree/master/wines |
+|         |                |             |          |                                                          |
+|         |                |             |          |                                                          |
