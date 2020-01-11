@@ -23,6 +23,10 @@ type NNEvo struct {
 	metric      string
 	validation  bool //used for Env interfaces for stochastic environments
 	env         Env
+
+	//used for mutations
+	shapes    [][]int
+	layerLocs []int //last index in weights for each layer
 }
 
 type Config struct {
@@ -45,6 +49,9 @@ type Env interface {
 //NewNNEvo Generates a new NNEvo struct from provided Config struct.
 //Must call CreatePopulation afterwards to generate neural nets
 func NewNNEvo(config *Config) *NNEvo {
+	if config.Population < config.Elites {
+		panic("Incapable of taking more elites than entire population.")
+	}
 	net := new(NNEvo)
 	net.goal = config.Goal
 	net.mxrt = config.Mxrt
@@ -64,11 +71,22 @@ func (agents *NNEvo) CreatePopulation(nn *Network) {
 	for i := range agents.population {
 		agents.population[i] = nn.Clone()
 	}
+	shapes, _, _, _ := nn.Serialize()
+	agents.shapes = shapes
+	agents.layerLocs = make([]int, len(shapes))
+	for i, val := range shapes {
+		rows, cols := val[0], val[1]
+		if i == 0 {
+			agents.layerLocs[i] = rows * cols
+		} else {
+			agents.layerLocs[i] = rows*cols + agents.layerLocs[i-1]
+		}
+	}
 }
 
 //Fit attempts to generate a neural net that produces targets when inputs
 //are fed into the network
-//method: loss function
+//method: loss function (i.e. "mse", "cross-entropy")
 //verbosity: generations to go without logging results
 func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64, method string, verbosity int) *Network {
 	if !contains(validLosses, method) {
@@ -82,51 +100,23 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 	}
 
 	goalMet := false
-	var metric string //value to log
 	var bestModel *Network
 	useBias := agents.population[0].bias
 	for gen := 0; gen < agents.generations; gen++ {
 		losses := make([]float64, len(agents.population))
-		for i := range agents.population {
-			outputs := agents.population[i].FeedFoward(inputs)
+		for i := range agents.population { //fitness calculation
+			outputs := agents.population[i].FeedForward(inputs)
 			loss := calcLoss(outputs, targets, method)
 			losses[i] = loss
 		}
 		matingPool := agents.nextGen(losses, true)
 		bestModel = agents.population[matingPool[0]]
-		loss := losses[matingPool[0]]
-		if agents.metric == "loss" {
-			if loss <= agents.goal {
-				goalMet = true
-			}
+		var loss, acc, valLoss, valAcc float64
+		loss, acc = bestModel.Evaluate(inputs, targets, method)
+		if validInputs != nil && validTargets != nil {
+			valLoss, valAcc = bestModel.Evaluate(validInputs, validTargets, method)
 		}
-		metric = strconv.FormatFloat(loss, 'f', 6, 64)
-		if agents.metric == "acc" || agents.metric == "valid-acc" {
-			outputs := bestModel.FeedFoward(inputs)
-			acc := calcAcc(outputs, targets)
-			if agents.metric == "acc" && acc >= agents.goal {
-				goalMet = true
-			}
-			metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
-		}
-		if agents.metric == "valid-loss" || agents.metric == "valid-acc" {
-			loss, acc := bestModel.Evaluate(validInputs, validTargets, method)
-			if agents.metric == "valid-loss" {
-				if loss <= agents.goal {
-					goalMet = true
-				}
-				metric = metric + " valid-loss - " + strconv.FormatFloat(loss, 'f', 6, 64)
-			} else {
-				if acc >= agents.goal {
-					goalMet = true
-				}
-				metric = metric + " valid-acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
-			}
-		}
-		if verbosity > 0 && gen%verbosity == 0 {
-			fmt.Print("Gen " + strconv.Itoa(gen) + ": loss - ")
-			fmt.Println(metric)
-		}
+		goalMet = agents.logMetrics(loss, acc, valLoss, valAcc, gen, verbosity)
 		if gen != agents.generations-1 && !goalMet {
 			children := agents.crossover(matingPool...)
 			agents.mutate(children...)
@@ -188,8 +178,20 @@ func (agents *NNEvo) mutate(newWeights ...[]float64) {
 	for i := range newWeights {
 		for j := range newWeights[i] {
 			if rand.Float64() < agents.mxrt {
+				//get layer
+				var layer int
+				for _, val := range agents.layerLocs {
+					if j > val {
+						layer++
+					} else {
+						break
+					}
+				}
+				//get mutation limit
+				rows, cols := agents.shapes[layer][0], agents.shapes[layer][1]
+				limit := math.Sqrt(6.0 / float64((rows + cols)))
 				//mutate
-				newWeights[i][j] = -1 + rand.Float64()*(2) //random float [-1,1]
+				newWeights[i][j] = -limit + rand.Float64()*(2*limit) //glorot uniform
 			}
 		}
 	}
@@ -237,6 +239,37 @@ func (agents *NNEvo) nextGen(fitness []float64, minimize bool) []int {
 	}
 	return newGen
 
+}
+
+func (agents *NNEvo) logMetrics(loss, acc, valLoss, valAcc float64, gen, verbosity int) bool {
+	goalMet := false
+	if verbosity > 0 && gen%verbosity == 0 {
+		fmt.Print("Gen " + strconv.Itoa(gen) + ": loss - ")
+		metric := strconv.FormatFloat(loss, 'f', 6, 64)
+		if agents.metric == "acc" || agents.metric == "valid-acc" {
+			metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+		}
+		if agents.metric == "valid-loss" || agents.metric == "valid-acc" {
+			metric = metric + " valid-loss - " + strconv.FormatFloat(loss, 'f', 6, 64)
+			if agents.metric == "valid-acc" {
+				metric = metric + " valid-acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+			}
+		}
+		fmt.Println(metric)
+	}
+	if agents.metric == "loss" && loss < agents.goal {
+		goalMet = true
+	}
+	if agents.metric == "acc" && acc > agents.goal {
+		goalMet = true
+	}
+	if agents.metric == "valid-loss" && valLoss < agents.goal {
+		goalMet = true
+	}
+	if agents.metric == "valid-acc" && valAcc > agents.goal {
+		goalMet = true
+	}
+	return goalMet
 }
 
 func calcLoss(preds, actual [][]float64, method string) float64 {

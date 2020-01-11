@@ -39,9 +39,9 @@ func main() {
 		{1, 0},
 	}
 
-	model := agents.Fit(inputs, targets, "cross-entropy", 1)
+	model := agents.Fit(inputs, targets, nil, nil, "cross-entropy", 1)
 
-	preds := model.FeedFoward(inputs)
+	preds := model.FeedForward(inputs)
 	fmt.Println(preds)
 	model.Save("model.json")
 

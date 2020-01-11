@@ -1,6 +1,7 @@
 package network
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -81,7 +82,7 @@ func (nn *Network) Compile(useBias bool) { //needs LR & Optimizer later
 
 //FeedForward passes data into the Network and generates an output.
 //FeedForward is capable of handling multiple inputs at once.
-func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
+func (nn *Network) FeedForward(data [][]float64) [][]float64 {
 	obs := len(data)
 	inputs := make([]float64, 0)
 	predictions := make([][]float64, obs)
@@ -115,9 +116,13 @@ func (nn *Network) FeedFoward(data [][]float64) [][]float64 {
 	return predictions
 }
 
+//Evaluate returns metrics on a Network.
+//Only calculates accuracy when cross-entropy is given as method type
 func (nn *Network) Evaluate(inputs, targets [][]float64, method string) (loss, acc float64) {
-	outputs := nn.FeedFoward(inputs)
-	acc = calcAcc(outputs, targets)
+	outputs := nn.FeedForward(inputs)
+	if method == "cross-entropy" {
+		acc = calcAcc(outputs, targets)
+	}
 	loss = calcLoss(outputs, targets, method)
 	return loss, acc
 }
@@ -266,7 +271,7 @@ type Model struct {
 	Activations []string
 }
 
-//Save serializes and saves a network into a json
+//Save serializes and saves a network into a gzip compressed json
 func (nn *Network) Save(filename string) {
 	shapes, weights, activations, bias := nn.Serialize()
 	data := Model{
@@ -276,15 +281,18 @@ func (nn *Network) Save(filename string) {
 		Weights:     weights,
 		Bias:        bias,
 	}
-	file, _ := json.Marshal(data)
-	err := ioutil.WriteFile(data.Name, file, 0644)
+	bytes, _ := json.Marshal(data)
+	f, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
+	w := gzip.NewWriter(f)
+	w.Write(bytes)
+	w.Close()
 }
 
-//Load takes a filename and returns a Network. Expects a json generated via
-//nn.Save
+//Load takes a filename and returns a Network. Expects a gzip compressed
+//json generated via nn.Save
 func Load(filename string) *Network {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -292,7 +300,13 @@ func Load(filename string) *Network {
 	}
 	defer file.Close()
 
-	data, _ := ioutil.ReadAll(file)
+	comp, err := gzip.NewReader(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer comp.Close()
+
+	data, _ := ioutil.ReadAll(comp)
 	var model Model
 	err = json.Unmarshal(data, &model)
 
