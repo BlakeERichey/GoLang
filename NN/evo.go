@@ -65,13 +65,28 @@ func NewNNEvo(config *Config) *NNEvo {
 	return net
 }
 
+//Summary prints out a friend display of the NNEvo Layout
+func (agents *NNEvo) Summary() {
+	fmt.Println(
+		"\n==================================NNEvo "+
+			"Summary=================================",
+		"\nGenerations:", agents.generations,
+		"\nPopulaiton:", len(agents.population),
+		"\nElites:", agents.elites,
+		"\nGoal:", agents.goal,
+		"\nMetric:", agents.metric,
+		"\nMxrt:", agents.mxrt,
+		"\n========================================"+
+			"========================================")
+}
+
 //CreatePopulation creates duplicates of provided network equal to Config.Population
 //nn: reference neural network
 func (agents *NNEvo) CreatePopulation(nn *Network) {
 	for i := range agents.population {
 		agents.population[i] = nn.Clone()
 	}
-	shapes, _, _, _ := nn.Serialize()
+	shapes, weights, _, _ := nn.Serialize()
 	agents.shapes = shapes
 	agents.layerLocs = make([]int, len(shapes))
 	for i, val := range shapes {
@@ -81,6 +96,9 @@ func (agents *NNEvo) CreatePopulation(nn *Network) {
 		} else {
 			agents.layerLocs[i] = rows*cols + agents.layerLocs[i-1]
 		}
+	}
+	if agents.mxrt == 0.0 {
+		agents.autoMxrt(len(shapes), weights...)
 	}
 }
 
@@ -98,6 +116,7 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 	if (validInputs == nil || validTargets == nil) && contains([]string{"valid-loss", "valid-acc"}, agents.metric) {
 		panic("No validation data to evaluate validation metric")
 	}
+	// fmt.Println("Fit params:", len(inputs), len(targets), len(validInputs), len(validTargets))
 
 	goalMet := false
 	var bestModel *Network
@@ -113,8 +132,10 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 		bestModel = agents.population[matingPool[0]]
 		var loss, acc, valLoss, valAcc float64
 		loss, acc = bestModel.Evaluate(inputs, targets, method)
+		// fmt.Println("loss", loss, "acc:", acc)
 		if validInputs != nil && validTargets != nil {
 			valLoss, valAcc = bestModel.Evaluate(validInputs, validTargets, method)
+			// fmt.Println("valLoss", valLoss, "valAcc:", valAcc)
 		}
 		goalMet = agents.logMetrics(loss, acc, valLoss, valAcc, gen, verbosity)
 		if gen != agents.generations-1 && !goalMet {
@@ -241,6 +262,13 @@ func (agents *NNEvo) nextGen(fitness []float64, minimize bool) []int {
 
 }
 
+func (agents *NNEvo) autoMxrt(numLayers int, weights ...float64) {
+	// agents.mxrt = 1.0 / math.Log(float64(len(weights))) / (float64(len(agents.population)))
+	// agents.mxrt = 1.0 / math.Log10(float64(len(weights))) / (float64(len(agents.population))) / float64(numLayers)
+	// agents.mxrt = float64(numLayers) / float64(len(weights)) / (float64(len(agents.population)))
+	agents.mxrt = math.Log(float64(len(weights))) / float64(len(weights)) / float64(numLayers) / math.Log10(float64(len(agents.population)))
+}
+
 func (agents *NNEvo) logMetrics(loss, acc, valLoss, valAcc float64, gen, verbosity int) bool {
 	goalMet := false
 	if verbosity > 0 && gen%verbosity == 0 {
@@ -250,9 +278,9 @@ func (agents *NNEvo) logMetrics(loss, acc, valLoss, valAcc float64, gen, verbosi
 			metric = metric + " acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
 		}
 		if agents.metric == "valid-loss" || agents.metric == "valid-acc" {
-			metric = metric + " valid-loss - " + strconv.FormatFloat(loss, 'f', 6, 64)
+			metric = metric + " valid-loss - " + strconv.FormatFloat(valLoss, 'f', 6, 64)
 			if agents.metric == "valid-acc" {
-				metric = metric + " valid-acc - " + strconv.FormatFloat(acc, 'f', 6, 64)
+				metric = metric + " valid-acc - " + strconv.FormatFloat(valAcc, 'f', 6, 64)
 			}
 		}
 		fmt.Println(metric)
@@ -323,4 +351,11 @@ func argmax(arr ...float64) (index int) {
 		}
 	}
 	return index
+}
+
+//ValidationSplit returns input, targets, validInputs, validTargets
+//splitting with perc% of the values being present in the validation arrays
+func ValidationSplit(inputs, targets [][]float64, perc float64) (in, tar, vI, vT [][]float64) {
+	validStart := int((1 - perc) * float64(len(inputs)))
+	return inputs[:validStart], targets[:validStart], inputs[validStart:], targets[validStart:]
 }

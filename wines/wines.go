@@ -14,27 +14,33 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
+	//load input, targets from wines
 	inputs, targets := load("wines.csv")
-	nn := network.Sequential()
-	nn.AddLayer(13, "input")
-	nn.AddLayer(16, "relu")
-	nn.AddLayer(16, "relu")
-	nn.AddLayer(8, "relu")
-	nn.AddLayer(3, "softmax")
-	nn.Compile(true)
-	nn.Summary()
 
+	//build network
+	nn := network.Sequential()
+	nn.AddLayer(13, "input")  //add input layer
+	nn.AddLayer(16, "relu")   //add hidden layer
+	nn.AddLayer(16, "relu")   //add hidden layer
+	nn.AddLayer(8, "relu")    //add hidden layer
+	nn.AddLayer(3, "softmax") //add output  layer
+	nn.Compile(true)
+	nn.Summary() //Print Network Params
+
+	//Configure NNEvo Params
 	config := network.Config{
 		Population:  100,
 		Generations: 10000,
 		Elites:      30,
 		Goal:        .995,
 		Metric:      "acc",
-		Mxrt:        0.001,
+		// Mxrt:        0.001, //Do not include mxrt for NNEvo to autoinfer a mutation rt
 	}
-	agents := network.NewNNEvo(&config)
-	agents.CreatePopulation(nn)
+	agents := network.NewNNEvo(&config) //initialize with params
+	agents.CreatePopulation(nn)         //create network pool
+	agents.Summary()
 
+	//run algorithm and return best model after config.Generations
 	start := time.Now()
 	model := agents.Fit(inputs, targets, nil, nil, "cross-entropy", 100)
 	elapsed := (time.Now()).Sub(start)

@@ -186,13 +186,15 @@ func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 func (nn *Network) Summary() {
 	shapes, weights, activations, _ := nn.Serialize()
 	fmt.Println(
-		"Inputs:", nn.input,
+		"\n==================================Model "+
+			"Summary=================================",
+		"\nInputs:", nn.input,
 		"\nOutputs:", nn.output,
 		"\nNum Layers:", len(nn.layers),
 		"\nUses Bias:", nn.bias,
 		"\nWeight Shapes:", shapes,
-		"\nLayer activations:", activations,
-		"\nTrainable Parameter:", len(weights),
+		"\nLayer Activations:", activations,
+		"\nTrainable Parameters:", len(weights),
 		"\n========================================"+
 			"========================================")
 }
