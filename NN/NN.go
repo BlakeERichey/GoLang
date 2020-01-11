@@ -83,6 +83,9 @@ func (nn *Network) Compile(useBias bool) { //needs LR & Optimizer later
 //FeedForward passes data into the Network and generates an output.
 //FeedForward is capable of handling multiple inputs at once.
 func (nn *Network) FeedForward(data [][]float64) [][]float64 {
+	if nn.output == 0 {
+		log.Fatal("Model not compiled, or no output nodes were found.")
+	}
 	obs := len(data)
 	inputs := make([]float64, 0)
 	predictions := make([][]float64, obs)
