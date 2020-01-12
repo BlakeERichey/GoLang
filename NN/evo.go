@@ -11,7 +11,7 @@ import (
 
 var (
 	validLosses  = []string{"mse", "cross-entropy"}
-	validMetrics = []string{"acc", "loss", "valid-loss", "valid-acc"}
+	validMetrics = []string{"acc", "loss", "valid-loss", "valid-acc", "reward", "valid-reward"}
 )
 
 type NNEvo struct {
@@ -22,7 +22,10 @@ type NNEvo struct {
 	goal        float64
 	metric      string
 	validation  bool //used for Env interfaces for stochastic environments
-	env         DiscreteEnv
+
+	//Environment for RL
+	disc DiscreteEnv
+	cont ContEnv
 
 	//used for mutations
 	shapes    [][]int
@@ -55,6 +58,16 @@ func NewNNEvo(config *Config) *NNEvo {
 		panic("Invalid metric.")
 	}
 	return net
+}
+
+//NewDiscreteEnv Sets NNEvo discrete environment
+func (agents *NNEvo) NewDiscreteEnv(env DiscreteEnv) {
+	agents.disc = env
+}
+
+//NewContEnv Sets NNEvo continuous environment
+func (agents *NNEvo) NewContEnv(env ContEnv) {
+	agents.cont = env
 }
 
 //Summary prints out a friend display of the NNEvo Layout
@@ -109,6 +122,9 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 	if (validInputs == nil || validTargets == nil) && contains([]string{"valid-loss", "valid-acc"}, agents.metric) {
 		panic("No validation data to evaluate validation metric")
 	}
+	if agents.metric == "reward" || agents.metric == "valid-reward" {
+		panic("Incompatible metric for Fit()")
+	}
 	// fmt.Println("Fit params:", len(inputs), len(targets), len(validInputs), len(validTargets))
 
 	goalMet := false
@@ -152,6 +168,94 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 	return bestModel
 }
 
+func (agents *NNEvo) Train(validate bool, sharpness, verbosity int) *Network {
+	if agents.metric != "reward" && agents.metric != "valid-reward" {
+		panic("Incompatible metric for Train()")
+	}
+
+	var envtype string
+	if agents.cont != nil {
+		envtype = "cont"
+	}
+	if agents.disc != nil {
+		if envtype != "" {
+			panic("Ambiguous Environment for Training.")
+		}
+		envtype = "disc"
+	}
+
+	goalMet := false
+	useBias := agents.population[0].bias
+	var bestModel *Network
+	for gen := 0; gen < agents.generations; gen++ {
+		//selection
+		matingPool, bestReward, bestValid := agents.selection(envtype, sharpness, validate)
+		bestModel = agents.population[matingPool[0]]
+
+		//Log Results
+		if verbosity > 0 && gen%verbosity == 0 {
+			report := "Gen: " + strconv.Itoa(gen) + ": Reward - "
+			report += strconv.FormatFloat(bestReward, 'f', 6, 64) + " Validation - "
+			report += strconv.FormatFloat(bestValid, 'f', 6, 64)
+			fmt.Println(report)
+		}
+
+		//Goal met?
+		if agents.metric == "reward" {
+			if bestReward >= agents.goal {
+				goalMet = true
+			}
+		} else if agents.metric == "valid-reward" {
+			if bestValid >= agents.goal {
+				goalMet = true
+			}
+		}
+
+		//Breed next gen
+		if gen != agents.generations-1 && !goalMet { //dont mutate on last gen
+			children := agents.crossover(matingPool...)
+			agents.mutate(children...)
+
+			//apply new gen to NNEvo.population
+			shapes, _, _, bias := bestModel.Serialize()
+			for i, weights := range children {
+				des := Deserialize(shapes, weights)
+				agents.population[i].SetWeights(des...)
+				if useBias {
+					agents.population[i].SetBias(bias...)
+				}
+			}
+		}
+		if goalMet {
+			break
+		}
+	}
+	return bestModel
+}
+
+func (agents *NNEvo) selection(envtype string, sharpness int, validate bool) ([]int, float64, float64) {
+	rewards := make([]float64, len(agents.population))
+	validations := make([]float64, len(agents.population))
+	if envtype == "disc" {
+		for i := range agents.population {
+			//rewards, validation rewards
+			r, v := RunDiscrete(agents.disc, agents.population[i], sharpness, validate, false)
+			rewards[i], validations[i] = r, v
+		}
+	}
+	if envtype == "cont" {
+		for i := range agents.population {
+			//rewards, validation rewards
+			r, v := RunCont(agents.cont, agents.population[i], sharpness, validate, false)
+			rewards[i], validations[i] = r, v
+		}
+	}
+	matingPool := agents.nextGen(rewards, false)
+	bestIndex := matingPool[0] //index of best performing model
+	return matingPool, rewards[bestIndex], validations[bestIndex]
+}
+
+//crossover returns weights of new Networks
 func (agents *NNEvo) crossover(matingPool ...int) (children [][]float64) {
 	children = make([][]float64, len(matingPool))
 	for i := 0; i < agents.elites; i++ {

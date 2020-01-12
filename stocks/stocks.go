@@ -23,6 +23,8 @@ import (
 // 	Render()
 // }
 
+//StockEnv is an implementation of ContEnv that evaluates a NNs performance at
+//guessing when to buy stocks
 type StockEnv struct {
 	steps                     int //how many steps have been taken
 	done                      bool
@@ -31,8 +33,8 @@ type StockEnv struct {
 	validInputs, validTargets [][]float64
 }
 
-//Init initializes a StockEnv with initial funds
-func Init() *StockEnv {
+//InitStockEnv initializes a StockEnv with initial funds
+func InitStockEnv() *StockEnv {
 	env := new(StockEnv)
 	env.steps = 0
 	env.done = false
@@ -61,7 +63,11 @@ func (env *StockEnv) Step(actionsList [][]float64) ([][]float64, float64, bool) 
 		}
 
 		env.steps++
-		env.done = env.steps >= len(env.inputs)
+		if env.validate {
+			env.done = env.steps >= len(env.inputs)
+		} else {
+			env.done = env.steps >= len(env.validInputs)
+		}
 		reward := env.getReward(ob, action)
 		rewards = append(rewards, reward)
 		// fmt.Println("Action:", action, "Reward:", reward)
