@@ -360,6 +360,7 @@ func (nn *Network) Clone() *Network {
 	return newNetwork
 }
 
+//Layer is a building block for a Network
 type Layer struct {
 	rows       int
 	cols       int
@@ -394,18 +395,4 @@ func contains(list []string, val string) bool {
 		}
 	}
 	return false
-}
-
-func minMax(array ...float64) (float64, float64) {
-	var max float64 = array[0]
-	var min float64 = array[0]
-	for _, value := range array {
-		if max < value {
-			max = value
-		}
-		if min > value {
-			min = value
-		}
-	}
-	return min, max
 }

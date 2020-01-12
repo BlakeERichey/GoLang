@@ -22,7 +22,7 @@ type NNEvo struct {
 	goal        float64
 	metric      string
 	validation  bool //used for Env interfaces for stochastic environments
-	env         Env
+	env         DiscreteEnv
 
 	//used for mutations
 	shapes    [][]int
@@ -36,14 +36,6 @@ type Config struct {
 	Goal        float64
 	Metric      string
 	Mxrt        float64
-}
-
-type Env interface {
-	init()
-	step() []float64
-	reset() []float64
-	getSteps() int
-	getReward() float64
 }
 
 //NewNNEvo Generates a new NNEvo struct from provided Config struct.
@@ -83,7 +75,8 @@ func (agents *NNEvo) Summary() {
 //CreatePopulation creates duplicates of provided network equal to Config.Population
 //nn: reference neural network
 func (agents *NNEvo) CreatePopulation(nn *Network) {
-	for i := range agents.population {
+	agents.population[0] = nn
+	for i := 1; i < len(agents.population); i++ {
 		agents.population[i] = nn.Clone()
 	}
 	shapes, weights, _, _ := nn.Serialize()
@@ -333,29 +326,10 @@ func calcLoss(preds, actual [][]float64, method string) float64 {
 func calcAcc(preds, actual [][]float64) (acc float64) {
 	numCor := 0
 	for i, val := range preds { //for each obs
-		if argmax(val...) == argmax(actual[i]...) {
+		if Argmax(val...) == Argmax(actual[i]...) {
 			numCor++
 		}
 	}
 	acc = float64(numCor) / float64(len(preds))
 	return acc
-}
-
-func argmax(arr ...float64) (index int) {
-	index = 0
-	maxVal := arr[0]
-	for i, val := range arr {
-		if val > maxVal {
-			index = i
-			maxVal = val
-		}
-	}
-	return index
-}
-
-//ValidationSplit returns input, targets, validInputs, validTargets
-//splitting with perc% of the values being present in the validation arrays
-func ValidationSplit(inputs, targets [][]float64, perc float64) (in, tar, vI, vT [][]float64) {
-	validStart := int((1 - perc) * float64(len(inputs)))
-	return inputs[:validStart], targets[:validStart], inputs[validStart:], targets[validStart:]
 }
