@@ -10,10 +10,12 @@ import (
 //fixed topological genetic algorithm neural network weight optimizer
 
 var (
-	validLosses  = []string{"mse", "cross-entropy"}
-	validMetrics = []string{"acc", "loss", "valid-loss", "valid-acc", "reward", "valid-reward"}
+	validLosses    = []string{"mse", "cross-entropy"}
+	validMetrics   = []string{"acc", "loss", "valid-loss", "valid-acc", "reward", "valid-reward"}
+	validCallbacks = []string{}
 )
 
+//NNEvo is a neural network pool manager
 type NNEvo struct {
 	population  []*Network
 	generations int
@@ -21,7 +23,10 @@ type NNEvo struct {
 	mxrt        float64
 	goal        float64
 	metric      string
-	validation  bool //used for Env interfaces for stochastic environments
+	validation  bool     //used for Env interfaces for stochastic environments
+	callbacks   []string //called after each generation
+
+	bestFitness float64 //used for checkpoint saving
 
 	//Environment for RL
 	disc DiscreteEnv
@@ -32,6 +37,7 @@ type NNEvo struct {
 	layerLocs []int //last index in weights for each layer
 }
 
+//Config is used to initialize a NNEvo instance
 type Config struct {
 	Population  int
 	Generations int
@@ -39,6 +45,7 @@ type Config struct {
 	Goal        float64
 	Metric      string
 	Mxrt        float64
+	Callbacks   []string
 }
 
 //NewNNEvo Generates a new NNEvo struct from provided Config struct.
@@ -47,16 +54,22 @@ func NewNNEvo(config *Config) *NNEvo {
 	if config.Population < config.Elites {
 		panic("Incapable of taking more elites than entire population.")
 	}
+	if !contains(validMetrics, config.Metric) {
+		panic("Invalid metric.")
+	}
+	for _, val := range config.Callbacks {
+		if !contains(validCallbacks, val) {
+			panic("Invalid callback.")
+		}
+	}
 	net := new(NNEvo)
 	net.goal = config.Goal
 	net.mxrt = config.Mxrt
 	net.elites = config.Elites
 	net.metric = config.Metric
+	net.callbacks = config.Callbacks
 	net.generations = config.Generations
 	net.population = make([]*Network, config.Population)
-	if !contains(validMetrics, net.metric) {
-		panic("Invalid metric.")
-	}
 	return net
 }
 
@@ -168,6 +181,9 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 	return bestModel
 }
 
+//Train applies a reinforcement learning approach. Requires an environment
+//to be provided via NewDiscreteEnv() or NewContEnv()
+//returns best model after final generation.
 func (agents *NNEvo) Train(validate bool, sharpness, verbosity int) *Network {
 	if agents.metric != "reward" && agents.metric != "valid-reward" {
 		panic("Incompatible metric for Train()")

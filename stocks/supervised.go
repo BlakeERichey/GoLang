@@ -54,5 +54,5 @@ func main() {
 	//View models results
 	loss, acc := model.Evaluate(inputs, targets, "cross-entropy")
 	fmt.Println("Loss:", loss, "Acc:", acc)
-	model.Save("stocks.model")
+	model.Save("supervised.model")
 }

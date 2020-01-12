@@ -29,6 +29,7 @@ func sumArr(array ...float64) (total float64) {
 	return total
 }
 
+//Argmax Returns the index of the largest value in arr
 func Argmax(arr ...float64) (index int) {
 	index = 0
 	maxVal := arr[0]
