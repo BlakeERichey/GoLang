@@ -14,9 +14,8 @@ func main() {
 	nn := network.Sequential()
 	nn.AddLayer(50, "input") //add input layer
 	nn.AddLayer(256, "relu") //add hidden layer
-	nn.AddLayer(128, "relu") //add hidden layer
-	nn.AddLayer(64, "relu")  //add hidden layer
-	nn.AddLayer(32, "relu")  //add hidden layer
+	nn.AddLayer(256, "relu") //add hidden layer
+	nn.AddLayer(256, "relu") //add hidden layer
 	nn.AddLayer(1, "tanh")   //add output  layer
 	nn.Compile(true)
 	nn.Summary()
@@ -27,7 +26,7 @@ func main() {
 	//Configure NNEvo Params
 	config := network.Config{
 		Population:  100,
-		Generations: 100,
+		Generations: 1000,
 		Elites:      20,
 		Goal:        10,
 		Metric:      "reward",

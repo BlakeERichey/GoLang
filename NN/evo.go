@@ -250,8 +250,15 @@ func (agents *NNEvo) selection(envtype string, sharpness int, validate bool) ([]
 			rewards[i], validations[i] = r, v
 		}
 	}
-	matingPool := agents.nextGen(rewards, false)
-	bestIndex := matingPool[0] //index of best performing model
+
+	var bestIndex int
+	var matingPool []int
+	if validate {
+		matingPool = agents.nextGenWithVal(rewards, validations, false)
+	} else {
+		matingPool = agents.nextGen(rewards, false)
+	}
+	bestIndex = matingPool[0] //index of best performing model
 	return matingPool, rewards[bestIndex], validations[bestIndex]
 }
 
@@ -357,6 +364,69 @@ func (agents *NNEvo) nextGen(fitness []float64, minimize bool) []int {
 	}
 	return newGen
 
+}
+
+//nextGenWithVal sorts fitness and their corresponding validations and returns a
+//list of which networks to breed for next generation.
+//Sample data:
+//fitness: [1,3,7,4,3,7,1]
+//validations: [0,4,6,3,2,3,4]
+//compArr [6,3,0,2,4,1,5]
+//ranked [2,5,3,1,4,6,0]
+func (agents *NNEvo) nextGenWithVal(fitness, validation []float64, minimize bool) []int {
+	//comparison sort - least to greatest
+	compArr := make([]int, len(fitness)) //indices
+	for i := 0; i < len(compArr)-1; i++ {
+		for j := i + 1; j < len(compArr); j++ {
+			if fitness[i] == fitness[j] {
+				if validation[i] < validation[j] {
+					if minimize {
+						compArr[j]++
+					} else {
+						compArr[i]++
+					}
+				} else {
+					if minimize {
+						compArr[i]++
+					} else {
+						compArr[j]++
+					}
+				}
+			} else if fitness[i] < fitness[j] {
+				if minimize {
+					compArr[j]++
+				} else {
+					compArr[i]++
+				}
+			} else {
+				if minimize {
+					compArr[i]++
+				} else {
+					compArr[j]++
+				}
+			}
+		}
+	}
+
+	ranked := make([]int, len(compArr)) //routes sorted
+	for i := range ranked {
+		ranked[compArr[i]] = i
+	}
+
+	//select new generation
+	newGen := make([]int, len(agents.population))
+	i := 0 //next gen index
+	for i < agents.elites {
+		newGen[i] = ranked[i]
+		i++
+	}
+
+	remaining := rand.Perm(len(agents.population))
+	for i < len(agents.population) {
+		newGen[i] = remaining[i-agents.elites]
+		i++
+	}
+	return newGen
 }
 
 func (agents *NNEvo) autoMxrt(numLayers int, weights ...float64) {
