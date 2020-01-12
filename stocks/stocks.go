@@ -82,6 +82,7 @@ func (env *StockEnv) Step(actionsList [][]float64) ([][]float64, float64, bool) 
 //Render added to implement ContEnv. Shows relevant StocksEnv info
 func (env *StockEnv) Render() {
 	//Render info here
+	fmt.Println("Steps:", env.steps)
 }
 
 //Reset resets env.done and env.steps. Returns all observations

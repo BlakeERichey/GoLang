@@ -101,8 +101,8 @@ you need to create a pool of agents:
     config := network.Config{
       Population:  100,  //how many networks to make
       Generations: 10000,
-      Elites:      30,   //the top 30 networks transition to the net generation
-      Goal:        .995, //Algorithm stops if this value is reach on metric provided
+      Elites:      30,   //the top 30 networks transition to the next generation
+      Goal:        .995, //Algorithm stops if this value is reached on metric provided
       Metric:      "acc",
       // Mxrt:        0.001, //Do not include mxrt for NNEvo to auto-define a mutation rate
     }

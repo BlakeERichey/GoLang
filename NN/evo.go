@@ -191,6 +191,10 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 //Train applies a reinforcement learning approach. Requires an environment
 //to be provided via NewDiscreteEnv() or NewContEnv()
 //returns best model after final generation.
+//sharpness: how many times to run env per network, averaging rewards
+//verbosity: how frequenty to display results
+//validate: whether to provide a validation metric.
+//Used primarily for stochastic environments
 func (agents *NNEvo) Train(validate bool, sharpness, verbosity int) *Network {
 	if agents.metric != "reward" && agents.metric != "valid-reward" {
 		panic("Incompatible metric for Train()")
