@@ -17,7 +17,8 @@ func main() {
 	nn.AddLayer(256, "relu") //add hidden layer
 	nn.AddLayer(256, "relu") //add hidden layer
 	nn.AddLayer(1, "tanh")   //add output  layer
-	nn.Compile(true)
+	nn.Compile(false)
+	nn = network.Load("reinforce.model")
 	nn.Summary()
 
 	//create Env
@@ -26,10 +27,11 @@ func main() {
 	//Configure NNEvo Params
 	config := network.Config{
 		Population:  100,
-		Generations: 1000,
+		Generations: 5000,
 		Elites:      20,
-		Goal:        10,
+		Goal:        100,
 		Metric:      "reward",
+		Callbacks:   []string{"checkpoint"},
 	}
 	agents := network.NewNNEvo(&config) //initialize with params
 	agents.CreatePopulation(nn)         //create network pool
@@ -43,7 +45,7 @@ func main() {
 	nn = agents.Train(validate, sharpness, verbosity)
 	elapsed := (time.Now()).Sub(start)
 	fmt.Println("Elapsed Time:", elapsed)
-	nn.Save("ga.model")
+	nn.Save("reinforce.model")
 
 	reward, valid := network.RunCont(env, nn, sharpness, validate, true)
 	fmt.Println("Reward:", reward, "Validation:", valid)

@@ -41,3 +41,15 @@ func Argmax(arr ...float64) (index int) {
 	}
 	return index
 }
+
+//contains returns true is list contains an element == val
+//list: list of values to look at
+//val:	val to compare elements of list to
+func contains(list []string, val string) bool {
+	for _, ele := range list {
+		if ele == val {
+			return true
+		}
+	}
+	return false
+}

@@ -5,7 +5,6 @@ package network
 type DiscreteEnv interface {
 	Step(action int) ([][]float64, float64, bool) //returns ob, reward, done
 	Reset() [][]float64                           //returns ob
-	GetSteps() int
 	Render()
 }
 
@@ -14,7 +13,6 @@ type DiscreteEnv interface {
 type ContEnv interface {
 	Step(action [][]float64) ([][]float64, float64, bool) //returns ob, reward, done
 	Reset() [][]float64                                   //returns ob
-	GetSteps() int
 	Render()
 }
 

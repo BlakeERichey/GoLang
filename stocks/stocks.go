@@ -95,11 +95,6 @@ func (env *StockEnv) Reset() [][]float64 {
 	return env.validInputs
 }
 
-//GetSteps return number of steps taken in environment
-func (env *StockEnv) GetSteps() int {
-	return env.steps
-}
-
 func (env *StockEnv) getReward(ob int, action string) (reward float64) {
 	answer := network.Argmax(env.targets[ob]...)
 	if answer == 1 && action != "sell" {

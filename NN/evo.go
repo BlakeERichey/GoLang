@@ -12,7 +12,7 @@ import (
 var (
 	validLosses    = []string{"mse", "cross-entropy"}
 	validMetrics   = []string{"acc", "loss", "valid-loss", "valid-acc", "reward", "valid-reward"}
-	validCallbacks = []string{}
+	validCallbacks = []string{"checkpoint"}
 )
 
 //NNEvo is a neural network pool manager
@@ -62,12 +62,14 @@ func NewNNEvo(config *Config) *NNEvo {
 			panic("Invalid callback.")
 		}
 	}
+	addCallbacks := make([]string, len(config.Callbacks))
+	copy(addCallbacks, config.Callbacks) //prevent inplace manipulation after config
 	net := new(NNEvo)
 	net.goal = config.Goal
 	net.mxrt = config.Mxrt
 	net.elites = config.Elites
 	net.metric = config.Metric
-	net.callbacks = config.Callbacks
+	net.callbacks = addCallbacks
 	net.generations = config.Generations
 	net.population = make([]*Network, config.Population)
 	return net
@@ -174,6 +176,11 @@ func (agents *NNEvo) Fit(inputs, targets, validInputs, validTargets [][]float64,
 				}
 			}
 		}
+		if contains(agents.callbacks, "checkpoint") {
+			if agents.isImproved(gen, loss, acc, valLoss, valAcc, 0, 0) {
+				bestModel.Save("checkpoint.model")
+			}
+		}
 		if goalMet {
 			break
 		}
@@ -240,6 +247,11 @@ func (agents *NNEvo) Train(validate bool, sharpness, verbosity int) *Network {
 				if useBias {
 					agents.population[i].SetBias(bias...)
 				}
+			}
+		}
+		if contains(agents.callbacks, "checkpoint") {
+			if agents.isImproved(gen, 0, 0, 0, 0, bestReward, bestValid) {
+				bestModel.Save("checkpoint.model")
 			}
 		}
 		if goalMet {
@@ -481,6 +493,48 @@ func (agents *NNEvo) logMetrics(loss, acc, valLoss, valAcc float64, gen, verbosi
 		goalMet = true
 	}
 	return goalMet
+}
+
+//modelImproved takes in metrics for best model of generation and returns whether
+//that model is better than saved checkpoint
+func (agents *NNEvo) isImproved(gen int, loss, acc, validLoss, validAcc, reward, validation float64) (isImproved bool) {
+	if agents.metric == "loss" {
+		if loss < agents.bestFitness || gen == 0 {
+			agents.bestFitness = loss
+			isImproved = true
+		}
+	}
+	if agents.metric == "acc" {
+		if acc > agents.bestFitness || gen == 0 {
+			agents.bestFitness = acc
+			isImproved = true
+		}
+	}
+	if agents.metric == "valid-loss" {
+		if validLoss < agents.bestFitness || gen == 0 {
+			agents.bestFitness = validLoss
+			isImproved = true
+		}
+	}
+	if agents.metric == "valid-acc" {
+		if validAcc > agents.bestFitness || gen == 0 {
+			agents.bestFitness = validLoss
+			isImproved = true
+		}
+	}
+	if agents.metric == "reward" {
+		if reward > agents.bestFitness || gen == 0 {
+			agents.bestFitness = reward
+			isImproved = true
+		}
+	}
+	if agents.metric == "valid-reward" {
+		if validation > agents.bestFitness || gen == 0 {
+			agents.bestFitness = validation
+			isImproved = true
+		}
+	}
+	return isImproved
 }
 
 func calcLoss(preds, actual [][]float64, method string) float64 {

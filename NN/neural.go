@@ -19,6 +19,8 @@ var (
 	validActivations = []string{"relu", "linear", "softmax", "sigmoid", "tanh"}
 )
 
+//Network is a Neural network that has features such as FeedForward,Evaluate
+//addLayer etc.
 type Network struct {
 	layers []Layer
 	input  int  //number of input nodes
@@ -268,6 +270,7 @@ func (nn *Network) SetBias(bias ...[]float64) {
 	}
 }
 
+//Model is used to save content of a network before saving. Also used to load a model
 type Model struct {
 	Name        string
 	Shapes      [][]int
@@ -383,16 +386,4 @@ func createLayer(rows, cols int, activation string, data []float64) *Layer {
 //setWeights sets layer's weight to passed in data
 func (layer *Layer) setWeights(data []float64) {
 	layer.weights = *mat.NewDense(layer.rows, layer.cols, data)
-}
-
-//contains returns true is list contains an element == val
-//list: list of values to look at
-//val:	val to compare elements of list to
-func contains(list []string, val string) bool {
-	for _, ele := range list {
-		if ele == val {
-			return true
-		}
-	}
-	return false
 }
