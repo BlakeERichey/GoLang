@@ -10,24 +10,23 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	//build network
-	nn := network.Sequential()
-	nn.AddLayer(50, "input") //add input layer
-	nn.AddLayer(256, "relu") //add hidden layer
-	nn.AddLayer(256, "relu") //add hidden layer
-	nn.AddLayer(256, "relu") //add hidden layer
-	nn.AddLayer(1, "tanh")   //add output  layer
-	nn.Compile(false)
-	nn = network.Load("reinforce.model")
-	nn.Summary()
-
 	//create Env
 	env := InitStockEnv()
+
+	//build network
+	nn := network.Sequential()
+	nn.AddLayer(50, "input")   //add input layer
+	nn.AddLayer(256, "linear") //add hidden layer
+	nn.AddLayer(256, "linear") //add hidden layer
+	nn.AddLayer(256, "linear") //add hidden layer
+	nn.AddLayer(1, "tanh")     //add output  layer
+	nn.Compile(false)
+	nn.Summary()
 
 	//Configure NNEvo Params
 	config := network.Config{
 		Population:  100,
-		Generations: 5000,
+		Generations: 50000,
 		Elites:      20,
 		Goal:        100,
 		Metric:      "reward",

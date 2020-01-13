@@ -144,7 +144,6 @@ func load(dir string) ([][]float64, [][]float64) {
 
 	ids := make([]float64, len(cummCsv))
 	inputs := make([][]float64, 0)
-	// outputs := make([][]float64, 0)
 	for i := range cummCsv {
 		//row values as floats
 		lstm := make([]float64, 50)
@@ -178,6 +177,13 @@ func load(dir string) ([][]float64, [][]float64) {
 		} else {
 			ids[i] = 1
 		}
+
+		//preprocess
+		avg := network.SumArr(data...) / float64(len(data)) //shift values
+		for i, val := range lstm {
+			lstm[i] = val - avg
+		}
+
 		inputs = append(inputs, lstm)
 	}
 	targets := onehot(2, ids)

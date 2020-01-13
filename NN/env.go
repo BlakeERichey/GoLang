@@ -37,7 +37,7 @@ func RunDiscrete(env DiscreteEnv, nn *Network, episodes int, validate, render bo
 				env.Render()
 			}
 		}
-		totalRewards[i] = sumArr(rewards...)
+		totalRewards[i] = SumArr(rewards...)
 	}
 
 	//validation run
@@ -54,15 +54,15 @@ func RunDiscrete(env DiscreteEnv, nn *Network, episodes int, validate, render bo
 					env.Render()
 				}
 			}
-			validateRewards[i] = sumArr(rewards...)
+			validateRewards[i] = SumArr(rewards...)
 		}
 	}
 
 	if validate {
 		n := float64(episodes)
-		return sumArr(totalRewards...) / n, sumArr(validateRewards...) / n
+		return SumArr(totalRewards...) / n, SumArr(validateRewards...) / n
 	}
-	return sumArr(totalRewards...) / float64(episodes), 0.0
+	return SumArr(totalRewards...) / float64(episodes), 0.0
 }
 
 //RunCont runs a ContEnv number of times equal to episodes and returns
@@ -85,7 +85,7 @@ func RunCont(env ContEnv, nn *Network, episodes int, validate, render bool) (flo
 				env.Render()
 			}
 		}
-		totalRewards[i] = sumArr(rewards...)
+		totalRewards[i] = SumArr(rewards...)
 	}
 
 	if validate {
@@ -101,13 +101,13 @@ func RunCont(env ContEnv, nn *Network, episodes int, validate, render bool) (flo
 					env.Render()
 				}
 			}
-			validateRewards[i] = sumArr(rewards...)
+			validateRewards[i] = SumArr(rewards...)
 		}
 	}
 
 	if validate {
 		n := float64(episodes)
-		return sumArr(totalRewards...) / n, sumArr(validateRewards...) / n
+		return SumArr(totalRewards...) / n, SumArr(validateRewards...) / n
 	}
-	return sumArr(totalRewards...) / float64(episodes), 0.0
+	return SumArr(totalRewards...) / float64(episodes), 0.0
 }

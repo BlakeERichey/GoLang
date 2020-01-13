@@ -169,7 +169,7 @@ func applyActivation(layer *Layer, matrix blas64.General, data ...float64) {
 		stride := 0
 		exp := make([]float64, layer.cols)
 		for ob := 0; ob < matrix.Rows; ob++ {
-			_, max := minMax(data[stride : stride+len(exp)]...) //for handling large values
+			_, max := MinMax(data[stride : stride+len(exp)]...) //for handling large values
 			for i := range exp {                                //raise e^data[i]
 				exp[i] = math.Exp(data[stride+i] - max)
 			}

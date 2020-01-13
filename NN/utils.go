@@ -7,8 +7,8 @@ func ValidationSplit(inputs, targets [][]float64, perc float64) (in, tar, vI, vT
 	return inputs[:validStart], targets[:validStart], inputs[validStart:], targets[validStart:]
 }
 
-//minMax returns the min and max of an array
-func minMax(array ...float64) (float64, float64) {
+//MinMax returns the min and max of an array
+func MinMax(array ...float64) (float64, float64) {
 	var max = array[0]
 	var min = array[0]
 	for _, value := range array {
@@ -22,7 +22,8 @@ func minMax(array ...float64) (float64, float64) {
 	return min, max
 }
 
-func sumArr(array ...float64) (total float64) {
+//SumArr returns sum of an array
+func SumArr(array ...float64) (total float64) {
 	for _, val := range array {
 		total += val
 	}
@@ -31,7 +32,6 @@ func sumArr(array ...float64) (total float64) {
 
 //Argmax Returns the index of the largest value in arr
 func Argmax(arr ...float64) (index int) {
-	index = 0
 	maxVal := arr[0]
 	for i, val := range arr {
 		if val > maxVal {

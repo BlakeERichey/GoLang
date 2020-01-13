@@ -1,3 +1,6 @@
 .vscode/
 stocks/csvs
+stocks/temp
+stocks/jsons
 stocks/*.model
+stocks/query_model.py
